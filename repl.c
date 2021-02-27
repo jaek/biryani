@@ -8,13 +8,16 @@
 
 // lval related shenanigans
 
-enum { LVAL_NUM, LVAL_ERR };
+enum { LVAL_NUM, LVAL_ERR, LVAL_SYM, LVAL_SEXPR };
 enum { LERR_DIV_ZERO, LERR_BAD_OP, LERR_BAD_NUM };
 
-typedef struct {
+typedef struct lval {
     int type;
     long num;
-    int err;
+    char* err;
+    char* sym;
+    int count;
+    struct lval** cell;
 } lval;
 
 
@@ -22,22 +25,57 @@ lval eval_op(lval x, char* op, lval y);
 lval eval(mpc_ast_t* t);
 void lval_println(lval v); 
 void lval_print(lval v);
-lval lval_err(int e);
-lval lval_num(long x);
+lval* lval_err(char* e);
+lval* lval_num(long x);
+lval* lval_sexpr(void);
+lval* lval_sym(char* s);
+void lval_free(lval v);
 
-
-lval lval_num(long x){
-    lval v;
-    v.type = LVAL_NUM;
-    v.num = x;
+lval* lval_num(long x){
+    lval* v = malloc(sizeof(lval));
+    v->type = LVAL_NUM;
+    v->num = x;
     return v;
 }
 
-lval lval_err(int e){
-    lval v;
-    v.type = LVAL_ERR;
-    v.err = e;
+lval* lval_err(char* e){
+    lval* v = malloc(sizeof(lval));
+    v->type = LVAL_ERR;
+    v->err = malloc(strlen(e) + 1);
+    strcpy(v->err, e);
     return v;
+}
+
+lval* lval_sym(char* s){
+    lval* v = malloc(sizeof(lval));
+    v->type = LVAL_SYM;
+    v->sym = malloc(strlen(s) + 1);
+    strcpy(v->sym, s);
+}
+
+lval* lval_sexpr(void) {
+  lval* v = malloc(sizeof(lval));
+  v->type = LVAL_SEXPR;
+  v->count = 0;
+  v->cell = NULL;
+  return v;
+}
+
+void lval_del(lval v){
+    switch(v->type){
+        case LVAL_NUM: break;
+        case LVAL_ERR:
+            free(v->err);
+        case LVAL_SYM:
+            free(v->sym);
+        case LVAL_SEXPR:
+            for(int i=0;i<v->count;i++){
+                lval_del(v->cell[i]);
+            }
+            free(v->cell);
+        break;
+    }
+    free(v);
 }
 
 void lval_print(lval v){
@@ -119,18 +157,20 @@ lval eval_op(lval x, char* op, lval y){
 int main(int argc, char** argv){
 
     // some parsers
-    mpc_parser_t* Num = mpc_new("number");
-    mpc_parser_t* Op = mpc_new("operator");
+    mpc_parser_t* Num  = mpc_new("number");
+    mpc_parser_t* Sym  = mpc_new("symbol");
+    mpc_parser_t* Sexpr = mpc_new("sexpr");
     mpc_parser_t* Expr = mpc_new("expr");
     mpc_parser_t* Prog = mpc_new("prog");
 
     // our grammar
     mpca_lang(MPCA_LANG_DEFAULT,
-            "								\
-            number 		: /-?[0-9]+/ ; 					\
-            operator 	: '+' | '-' | '/' | '*' ; 			\
-            expr 		: <number> | '(' <operator> <expr>+ ')' ; 	\
-            prog 		: /^/ <operator> <expr>+ /$/ ;			\
+            "								                \
+            number  : /-?[0-9]+/ ; 					        \
+            symbol  : '+' | '-' | '/' | '*' ; 			    \
+            sexpr   : '(' <expr>+ ')' ;                     \
+            expr    : <number> | <symbol> | <expr> ; \
+            prog    : /^/ <expr> /$/ ;			\
             ",
             Num, Op, Expr, Prog);
 
@@ -156,6 +196,6 @@ int main(int argc, char** argv){
 
         free(input);
     }
-    mpc_cleanup(4, Num, Op, Expr, Prog);
+    mpc_cleanup(5, Num, Sym, Expr, Sexpr, Prog);
     return(0);
 }
