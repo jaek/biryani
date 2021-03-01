@@ -2,7 +2,6 @@
 #include <stdlib.h>
 
 #define MAX_TOKENS 128 
-#define DEBUG
 
 typedef struct lex_r {
     char* rep[MAX_TOKENS];
@@ -20,21 +19,24 @@ lex_r* tokenize(char* s){
             fprintf(stderr, "tokenize: input str too long\n");
         }
         // TODO: refactor to switch statement
-        if(s[i] == ' '){
-            ; //ignore spaces
+        if(s[i] == ' ' || s[i] == '\0' || s[i] == 10){ //10 == LF
+            i++; //ignore spaces
         } else if((s[i] >= '(' && s[i] <= '+') || s[i] == '-' || s[i] == '/'){ //handle operators +-/* and ()
             lx->rep[tok] = malloc(sizeof(s[i]) + 1); 
             lx->rep[tok][0] = s[i];
             lx->rep[tok][1] = '\0';
             tok++;
+            i++;
         } else { // treat anything that isn't an operator or bracket as an identifier for now
+            // get the length of the current expr
             k = i+1;
-            while(s[k] != ' ' && s[k] != '(' && s[k] != ')'){
+            while(s[k] != ' ' && s[k] != '(' && s[k] != ')' && s[k] != '\0'){
                 k++; 
             }
+            // copy it to the representation
             lx->rep[tok] = malloc((sizeof(char) * (k - i)) + 2);
             k = 0;
-            while(s[i] != ' ' && s[i] != '(' && s[i] != ')'){
+            while(s[i] != ' ' && s[i] != '(' && s[i] != ')' && s[i] != '\0'){
                 lx->rep[tok][k] = s[i];
                 i++;
                 k++; 
@@ -42,7 +44,6 @@ lex_r* tokenize(char* s){
             lx->rep[tok][k] = '\0';
             tok++;
         }
-        i++;
     }
     lx->count = tok;
     return lx; 
@@ -68,10 +69,3 @@ void free_lex(lex_r *lx){
     free(lx);
 }
 
-int main(int argc, char** argv){
-    char* l = "(print '1+2=' (+ 1 2))";
-    lex_r *lx = tokenize(l);
-    show_lex(lx);
-    free_lex(lx);
-    return 0;
-}

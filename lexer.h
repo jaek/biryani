@@ -2,7 +2,6 @@
 #include <stdlib.h>
 
 #define MAX_TOKENS 128 
-#define DEBUG
 
 typedef struct lex_r {
     char* rep[MAX_TOKENS];
@@ -68,10 +67,3 @@ void free_lex(lex_r *lx){
     free(lx);
 }
 
-int main(int argc, char** argv){
-    char* l = "(print '1+2=' (+ 1 2))";
-    lex_r *lx = tokenize(l);
-    show_lex(lx);
-    free_lex(lx);
-    return 0;
-}
