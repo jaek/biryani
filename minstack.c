@@ -42,7 +42,7 @@ int bs_pop(Top *t){
 	return rval;	
 }
 
-List *bs_peek(t){
+List *bs_peek(Top t){
 	return(t->head);
 }
 

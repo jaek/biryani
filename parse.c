@@ -4,20 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "minstack.h"
-#include "expr.h"
 
-int is_int(char *s){
-    int z=0;
-    for(int i=0; i<strlen(s); i++){
-        if(s[i] >= '0' && s[i] <= '9'){
-            z *= 10;
-            z += s[i] - 48;
-        } else {
-            return -1;
-        }
-    }
-    return z;
-}
 
 bool is_terminal(char c){
 	if(c == '(' || c == ')' || c == ' ' || c == '\0'){
@@ -39,11 +26,14 @@ char *get_symbol(char *c, int start, int end){
 	int len = (end - start);
 	char * sym  = malloc(sizeof(char) * len + 1);
 	memcpy(sym, &c[start], len);
+	sym[len+1] = '\0';
+	printf("new sym: %s\n", sym);
 	return sym;
 }
 
 int parse_expr(char * c,  int i, Top t){
 	int end;
+	List *n;
 	char *sym;
 	switch(c[i]){
 		case ' ':
@@ -51,15 +41,27 @@ int parse_expr(char * c,  int i, Top t){
 		case ')':
 			return (bs_pop(&t) == ')') ? parse_expr(c, i+1, t) : -1;
 		case '(':
-			bs_push(empty_list(), ')', &t);
+			n = empty_list();
+			if(bs_peek(t) != NULL){
+				printf("appending new empty list\n");
+				append_list(bs_peek(t), n);
+			}
+			bs_push(n, ')', &t);
 			return parse_expr(c, i+1, t);
 		case '\0':
-			return (t->count == 0) ? 1 : -1;
+			printf("EOF\n");
+			return (t->count == 0) ?  1 : -1;
 		default:
+			printf("default\n");
 			//create a new symbol
 			end = next_terminal(c, i);
+			printf("end: %i\n", c[end]);
 			sym = get_symbol(c, i, end);
-			printf("new sym: %s\n", sym);
+			//add it to the env
+			n = create_atomic_list(sym);
+
+			printf("appending new atomic list %s\n", sym);
+			append_list(bs_peek(t), n);	
 			return parse_expr(c, end, t);
 	}
 }
@@ -68,8 +70,8 @@ void repl(){
 	char input[2048];
 	while(1){
 
-		printf("input> ");
-		scanf("%s", ighhkput);
+		printf("\ninput> ");
+		scanf("%s", input);
 		Top t = bs_init(0);
 		parse_expr(input, 0, t);
 		free_stack(t);
@@ -96,7 +98,6 @@ void _test_parser(){
 
 
 int main(int argv, char** argc){
-	//repl();
-	_test_parser();
+	repl();
 	return 0;
 }

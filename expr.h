@@ -30,3 +30,12 @@ Atom * str_atom(char * s);
 
 Atom * num_atom(int n);
 
+List * create_atomic_list(char* sym);
+
+void append_list(List *car, List *cdr);
+
+int is_int(char *);
+
+void recur_print(List *l);
+
+void print_atom(Atom *a);
