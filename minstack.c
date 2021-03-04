@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stddef.h>
+#include <stdio.h>
 #include "expr.h"
 
 struct b_stack{

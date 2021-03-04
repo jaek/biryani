@@ -26,6 +26,8 @@ typedef struct List {
 
 List * empty_list();
 
+List * root_node();
+
 Atom * str_atom(char * s);
 
 Atom * num_atom(int n);
@@ -39,3 +41,6 @@ int is_int(char *);
 void recur_print(List *l);
 
 void print_atom(Atom *a);
+
+void _test_list_operations();
+

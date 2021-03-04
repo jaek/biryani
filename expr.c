@@ -17,13 +17,13 @@ typedef struct Atom {
 
 // an expression can either consist of a list or an atom
 typedef enum expr_t{
-	LIST, ATOM, NIL
+	LIST, ATOM, NIL, ROOT
 }expr_t;
 
 typedef struct List {
 	expr_t type;
 	union {
-		Atom * data;
+		Atom *data;
 		struct List *head;
 	};
 	struct List *tail;
@@ -37,6 +37,12 @@ List * empty_list(){
 	l->head = NULL;
 	l->tail = NULL;
 	return l;
+}
+
+List * root_node(){
+	List * root = empty_list();
+	root->type = ROOT;
+	return root;
 }
 
 Atom * str_atom(char * s){
@@ -68,35 +74,36 @@ int is_int(char *s){
 }
 
 void append_list(List *car, List *cdr){
-	if(car->head == NULL){
-		printf("append: nil\n");
+	if(car->type == NIL){
 		car->type = LIST;
 		car->head = cdr;
 		return;
-	} else if (car->tail == NULL) {
-		printf("append: tail == NULL\n");
+	} else if (car->type == ATOM || car->tail == NULL) {
 		car->tail = cdr;
 		return;
 	} else {
-		printf("append: tail !== NULL\n");
 		append_list(car->tail, cdr);
-		car->tail = cdr;
 		return;
 	}	
 }
 
 void print_atom(Atom *a){
-	printf("A-> %s\n", a->str);
+	printf("Atom-> %s : %i\n", a->str, a->type);
 }
 
 void recur_print(List *l){
 	if(l == NULL){
+		printf("* NULL PRINT\n");
 		return;
 	} else if(l->type == NIL){
-		printf("NIL\n");
+		printf("* NIL NODE\n");
 	} else if(l->type == ATOM){
+		printf("* ATOM NODE\n");
 		print_atom(l->data);
 	} else {
+		if(l->type != ROOT){
+		printf("* LIST NODE\n");
+		}
 		if(l->head != NULL){
 			recur_print(l->head);
 		}
@@ -110,11 +117,8 @@ List * create_atomic_list(char* sym){
 	Atom *a;
 	List *l = empty_list();
 	l->type = ATOM;
-	if(is_int(sym)){
-		a = num_atom(is_int(sym));
-	} else {
-		a = str_atom(sym);
-	}
+	a = str_atom(sym);
 	l->data = a;
 	return l;
 }
+
