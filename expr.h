@@ -12,7 +12,7 @@ typedef struct Atom {
 
 // an expression can either consist of a list or an atom
 typedef enum expr_t{
-	LIST, ATOM, NIL
+	LIST, ATOM, NIL, ROOT
 }expr_t;
 
 typedef struct List {
@@ -42,5 +42,6 @@ void recur_print(List *l);
 
 void print_atom(Atom *a);
 
-void _test_list_operations();
+void list_print(List *l);
 
+void print_list_type(List *l);

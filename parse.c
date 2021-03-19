@@ -14,14 +14,16 @@ bool is_terminal(char c){
 	}
 }
 
-int next_terminal(char *c, int start){
-	int i = start;
-	while(is_terminal(c[i]) == false){
+// Return the integer offest of the next terminal character
+int next_terminal(char *input_string, int offset){
+	int i = offset;
+	while(is_terminal(input_string[i]) == false){
 		i++;
 	}
 	return i;
 }
 
+// given a start offset and an end offset, return a new null-terminated string
 char *get_symbol(char *c, int start, int end){
 	int len = (end - start);
 	char * sym  = malloc(sizeof(char) * len + 1);
@@ -30,37 +32,38 @@ char *get_symbol(char *c, int start, int end){
 	return sym;
 }
 
-int parse_expr(char * c,  int i, Top t){
+
+
+int parse_expr(char * input,  int offset, Top t){
 	int end;
-	List *n;
+	List *new_symbol;
 	char *sym;
 
-	switch(c[i]){
-		case '\n':
+	switch(input[offset]){
+		case '\n': 
 		case ' ':
-			return parse_expr(c, i+1, t);
+			return parse_expr(input, offset+1, t); // ignore newlines and spaces in parsing the input
 		case ')':
-			return (bs_pop(&t) == ')') ? parse_expr(c, i+1, t) : -1;
+			return (bs_pop(&t) == ')') ? parse_expr(input, offset+1, t) : -1;
 		case '(':
-			n = empty_list();
-			append_list(bs_peek(t), n);
-			bs_push(n, ')', &t);
-			return parse_expr(c, i+1, t);
+			new_symbol = empty_list();
+			append_list(bs_peek(t), new_symbol);
+			bs_push(new_symbol, ')', &t);
+			return parse_expr(input, offset+1, t);
 		case '\0':
 			return (t->count == 0) ?  1 : -1;
 		default:
 			//create a new symbol
-			end = next_terminal(c, i);
-			sym = get_symbol(c, i, end);
-
+			end = next_terminal(input, offset);
+			sym = get_symbol(input, offset, end);
 			//add it to the env
-			n = create_atomic_list(sym);
+			new_symbol = create_atomic_list(sym);
 			if(bs_peek(t) == NULL){
 				printf("error: NULL head\n");
 			} else { 
-				append_list(bs_peek(t), n);	
+				append_list(bs_peek(t), new_symbol);	
 			}
-			return parse_expr(c, end, t);
+			return parse_expr(input, end, t);
 	}
 }
 
@@ -78,6 +81,7 @@ void repl(){
 		parse_expr(input, 0, t);
 
 		recur_print(root);
+		//list_print(root);
 		free_stack(t);
 	}
 }

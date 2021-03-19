@@ -128,13 +128,11 @@ void recur_print(List *l){
 		if(l->tail != NULL){
 			recur_print(l->tail);
 		}
-		printf(") ");
-	
 
 	} else if(l->type == ROOT){
 		printf("{ ");
 		recur_print(l->head);
-		printf("} ");
+		printf("}");
 	}
 }
 
